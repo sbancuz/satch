@@ -1,0 +1,4 @@
+cmake-build-debug
+tes*
+.clang-tidy
+.idea
