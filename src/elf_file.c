@@ -3,8 +3,6 @@
 //
 
 #include "headers/elf_file.h"
-#include "headers/elf_header.h"
-#include "headers/elf_program_header.h"
 
 Elf_file read_elf(FILE *src) {
     Elf_file file = {

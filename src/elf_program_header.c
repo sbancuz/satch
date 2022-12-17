@@ -8,40 +8,44 @@
 #include "headers/macros.h"
 
 // https://en.wikipedia.org/wiki/Executable_and_Linkable_Format#Program_header
-Elf64_Phdr read_program_header(FILE *src) {
-    Elf64_Phdr hdr = { 0 };
+ElfW(Phdr) read_program_header(FILE *src) {
+    ElfW(Phdr) hdr = {0};
 
     // Identifies the type of the segment.
     read_bytes(src, hdr.p_type, 4);
     printf("%x\n", hdr.p_type);
-
+#if defined(__LP64__)
     // Segment-dependent flags (position for 64-bit structure).
     read_bytes(src, hdr.p_flags, 4);
-
+#endif
     // Offset of the segment in the file image.
-    read_bytes(src, hdr.p_offset, 8);
+    read_bytes(src, hdr.p_offset, ElfWs);
 
     // Virtual address of the segment in memory.
-    read_bytes(src, hdr.p_vaddr, 8);
+    read_bytes(src, hdr.p_vaddr, ElfWs);
 
     // On systems where physical address is relevant, reserved for segment's physical address.
-    read_bytes(src, hdr.p_paddr, 8);
+    read_bytes(src, hdr.p_paddr, ElfWs);
 
     // Size in bytes of the segment in the file image. May be 0.
-    read_bytes(src, hdr.p_filesz, 8);
+    read_bytes(src, hdr.p_filesz, ElfWs);
 
     // Size in bytes of the segment in memory. May be 0.
-    read_bytes(src, hdr.p_memsz, 8);
+    read_bytes(src, hdr.p_memsz, ElfWs);
+#if defined(__LP32__)
+    // Segment-dependent flags (position for 64-bit structure).
+    read_bytes(src, hdr.p_flags, 4);
+#endif
 
     // 0 and 1 specify no alignment.
     // Otherwise, should be a positive, integral power of 2,
     // with p_vaddr equating p_offset modulus p_align.
-    read_bytes(src, hdr.p_align, 8);
+    read_bytes(src, hdr.p_align, ElfWs);
 
     return hdr;
 }
 
-void print_program_header(Elf64_Phdr *hdr) {
+void print_program_header(ElfW(Phdr) *hdr) {
     printf("Program Header: \n");
     printf("\tSegment Type: %s\n", segment_type_to_str(hdr->p_type));
     printf("\tFlags:        %x\n", hdr->p_flags);
@@ -53,7 +57,7 @@ void print_program_header(Elf64_Phdr *hdr) {
     printf("\tAlignment:    %lx\n", hdr->p_align);
 }
 
-char *segment_type_to_str(Elf64_Word typ) {
+char *segment_type_to_str(ElfW(Word) typ) {
     switch (typ) {
         case PT_NULL:
             return "PT_NULL     - Program header table entry unused.";

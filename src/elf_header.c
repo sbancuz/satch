@@ -6,8 +6,8 @@
 #include "headers/macros.h"
 
 // https://en.wikipedia.org/wiki/Executable_and_Linkable_Format#File_header
-Elf64_Ehdr read_elf_header(FILE *src) {
-    Elf64_Ehdr hdr = {0};
+ElfW(Ehdr) read_elf_header(FILE *src) {
+    ElfW(Ehdr) hdr = {0};
 
     // magic number 7F 45 4c 46
     read_bytes(src, hdr.e_ident[EI_MAG0], 4);
@@ -41,13 +41,13 @@ Elf64_Ehdr read_elf_header(FILE *src) {
 
     // This is the memory address of the entry point from where the process starts executing.
     // If the file doesn't have an associated entry point, then this holds zero.
-    read_bytes(src, hdr.e_entry, sizeof(void *));
+    read_bytes(src, hdr.e_entry, ElfWs);
 
     // Points to the start of the program header table.
-    read_bytes(src, hdr.e_phoff, sizeof(void *));
+    read_bytes(src, hdr.e_phoff, ElfWs);
 
     // Points to the start of the section header table.
-    read_bytes(src, hdr.e_shoff, sizeof(void *));
+    read_bytes(src, hdr.e_shoff, ElfWs);
 
     // Interpretation of this field depends on the target architecture.
     read_bytes(src, hdr.e_flags, 4);
@@ -73,7 +73,7 @@ Elf64_Ehdr read_elf_header(FILE *src) {
     return hdr;
 }
 
-void print_elf_header(Elf64_Ehdr *hdr) {
+void print_elf_header(ElfW(Ehdr) *hdr) {
     printf("File Header:\n");
 
     printf("\tMagic number: %2x %2x %2x %2x %2x %2x %2x %2x %2x 00 00 00 00 00 00 00\n",
@@ -86,7 +86,7 @@ void print_elf_header(Elf64_Ehdr *hdr) {
     printf("\tEndianness:   %s\n", hdr->e_ident[EI_DATA] == 1 ? "LE" : "BE");
     printf("\tELF:          %x\n", hdr->e_ident[EI_VERSION]);
     printf("\tABI:          %s\n", abi_to_string(hdr->e_ident[EI_OSABI]));
-    printf("\tABI Version:  %x\n",  hdr->e_ident[EI_ABIVERSION]);
+    printf("\tABI Version:  %x\n", hdr->e_ident[EI_ABIVERSION]);
     printf("\tFile Type:    %s\n", type_to_string(hdr->e_type));
     printf("\tMachine:      %s\n", machine_to_string(hdr->e_machine));
     printf("\tVersion:      %x\n", hdr->e_version);
@@ -145,7 +145,7 @@ char *abi_to_string(int abi) {
     return "Invalid";
 }
 
-char *type_to_string(Elf64_Half type) {
+char *type_to_string(ElfW(Half) type) {
     switch (type) {
         case ET_NONE:
             return "Unknown";
@@ -170,7 +170,7 @@ char *type_to_string(Elf64_Half type) {
     return "Invalid";
 }
 
-char *machine_to_string(Elf64_Half machine) {
+char *machine_to_string(ElfW(Half) machine) {
     // the list may be incomplete
 
     switch (machine) {

@@ -8,12 +8,17 @@
 #include <elf.h>
 #include <bits/types/FILE.h>
 
+#include "elf_header.h"
+#include "elf_program_header.h"
+#include "elf_section_header.h"
+
 typedef struct elf_fil {
-    Elf64_Ehdr e_hdr;
-    Elf64_Phdr p_hdr;
+    ElfW(Ehdr) e_hdr;
+    ElfW(Phdr) p_hdr;
+
 } Elf_file;
 
-Elf_file read_elf(FILE * src);
+Elf_file read_elf(FILE *src);
 
 void print_elf(Elf_file *f);
 
