@@ -8,17 +8,11 @@
 #include "headers/elf_section_header.h"
 
 void print_section_header(ElfW(Shdr) *hdr) {
-    printf("Section Header:\n");
-
-    printf("\tString off:   %x\n", hdr->sh_name);
-    printf("\tType:         %s\n", section_type_to_string(hdr->sh_type));
-    printf("\tFlags:        %s\n", section_flags_to_string(hdr->sh_flags));
-    printf("\tMem V_addr:   %lx\n", hdr->sh_addr);
-    printf("\tSection off:  %lx\n", hdr->sh_offset);
-    printf("\tSection size: %lx\n", hdr->sh_size);
-    printf("\tSection index:%x\n", hdr->sh_link);
-    printf("\tExtra info:   %lx\n", hdr->sh_addralign);
-    printf("\tFix sz size:  %lx\n", hdr->sh_entsize);
+    printf(" %016x  %16s  %016lx  %08lx\n",
+           hdr->sh_name, section_type_to_string(hdr->sh_type), hdr->sh_addr, hdr->sh_offset);
+    printf("       %016lx  %016lx  %3s %6d %6d %5ld\n",
+           hdr->sh_size, hdr->sh_entsize, section_flags_to_string(hdr->sh_flags), hdr->sh_link, hdr->sh_info,
+           hdr->sh_addralign);
 }
 
 ElfW(Shdr) read_section_header(FILE *src, ElfW(Off) off) {
@@ -65,67 +59,65 @@ char *section_type_to_string(ElfW(Word) type) {
 
     switch (type) {
         case SHT_NULL:
-            return "Section header table entry unused";
+            return "NULL";
         case SHT_PROGBITS:
-            return "Program data";
+            return "PROGBITS";
         case SHT_SYMTAB:
-            return "Symbol table";
+            return "SYMTAB";
         case SHT_STRTAB:
-            return "String table";
+            return "STRTAB";
         case SHT_RELA:
-            return "Relocation entries with addends";
+            return "RELA";
         case SHT_HASH:
-            return "Symbol hash table";
+            return "HASH";
         case SHT_DYNAMIC:
-            return "Dynamic linking information";
+            return "DYNAMIC";
         case SHT_NOTE:
-            return "Notes";
+            return "NOTE";
         case SHT_NOBITS:
-            return "Program space with no data (bss)";
+            return "NOBITS";
         case SHT_REL:
-            return "Relocation entries, no addends";
+            return "REL";
         case SHT_SHLIB:
-            return "Reserved";
+            return "SHLIB";
         case SHT_DYNSYM:
-            return "Dynamic linker symbol table";
+            return "DYNSYM";
         case SHT_INIT_ARRAY:
-            return "Array of constructors";
+            return "INIT_ARRAY";
         case SHT_FINI_ARRAY:
-            return "Array of destructors";
+            return "FINI_ARRAY";
         case SHT_PREINIT_ARRAY:
-            return "Array of pre-constructors";
+            return "REINIT_ARRAY";
         case SHT_GROUP:
-            return "Section group";
+            return "GROUP";
         case SHT_SYMTAB_SHNDX:
-            return "Extended section indices";
+            return "SYMTAB_SHNDX";
         case SHT_NUM:
-            return "Number of defined types.";
+            return "NUM";
         case SHT_LOOS:
-            return "Start OS-specific.";
+            return "LOOS";
     }
 
-    return "Unknown";
+    return "UNK";
 }
 
 char *section_flags_to_string(ElfW(Xword) flags) {
-    char str[1024] = "\0";
-    if (flags & SHF_WRITE) strcat(str, "Writable, ");
-    if (flags & SHF_ALLOC) strcat(str, "Occupies memory during execution, ");
-    if (flags & SHF_EXECINSTR) strcat(str, "Executable, ");
-    if (flags & SHF_MERGE) strcat(str, "Might be merged, ");
-    if (flags & SHF_STRINGS) strcat(str, "Contains null-terminated strings, ");
-    if (flags & SHF_INFO_LINK) strcat(str, "'sh_info' contains SHT index, ");
-    if (flags & SHF_LINK_ORDER) strcat(str, "Preserve order after combining, ");
-    if (flags & SHF_OS_NONCONFORMING) strcat(str, "Non-standard OS specific handling required, ");
-    if (flags & SHF_GROUP) strcat(str, "Section is member of a group, ");
-    if (flags & SHF_TLS) strcat(str, "Section hold thread-local data, ");
-    if (flags & SHF_MASKOS) strcat(str, "OS-specific, ");
-    if (flags & SHF_MASKPROC) strcat(str, "Processor-specific, ");
-    if (flags & SHF_ORDERED) strcat(str, "Special ordering requirement (Solaris), ");
-    if (flags & SHF_EXCLUDE) strcat(str, "Section is excluded unless referenced or allocated (Solaris), ");
+    char str[11] = "\0";
+    if (flags & SHF_WRITE) strcat(str, "W");
+    if (flags & SHF_ALLOC) strcat(str, "A");
+    if (flags & SHF_EXECINSTR) strcat(str, "X");
+    if (flags & SHF_MERGE) strcat(str, "M");
+    if (flags & SHF_STRINGS) strcat(str, "S");
+    if (flags & SHF_INFO_LINK) strcat(str, "I");
+    if (flags & SHF_LINK_ORDER) strcat(str, "L");
+    if (flags & SHF_OS_NONCONFORMING) strcat(str, "O");
+    if (flags & SHF_GROUP) strcat(str, "G");
+    if (flags & SHF_TLS) strcat(str, "T");
+    if (flags & SHF_EXCLUDE) strcat(str, "E");
+    if (flags & SHF_COMPRESSED) strcat(str, "C");
     str[strlen(str) - 3] = '\0';
 
-    char * ret = malloc(strlen(str));
+    char *ret = malloc(strlen(str));
     strcpy(ret, str);
     return ret;
 }

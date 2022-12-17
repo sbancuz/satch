@@ -76,7 +76,7 @@ ElfW(Ehdr) read_elf_header(FILE *src) {
 void print_elf_header(ElfW(Ehdr) *hdr) {
     printf("File Header:\n");
 
-    printf("\tMagic number: %2x %2x %2x %2x %2x %2x %2x %2x %2x 00 00 00 00 00 00 00\n",
+    printf("\tMagic number: %02x %02x %02x %02x %02x %02x %02x %02x %02x 00 00 00 00 00 00 00\n",
            hdr->e_ident[EI_MAG0], hdr->e_ident[EI_MAG1], hdr->e_ident[EI_MAG2],
            hdr->e_ident[EI_MAG3], hdr->e_ident[EI_CLASS], hdr->e_ident[EI_DATA],
            hdr->e_ident[EI_VERSION], hdr->e_ident[EI_OSABI], hdr->e_ident[EI_ABIVERSION]

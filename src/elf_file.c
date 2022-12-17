@@ -22,9 +22,13 @@ void print_elf(Elf_file *f) {
     printf("\n");
     print_program_header(&f->p_hdr);
     printf("\n");
+
+    printf("  [N°] Name              Type             Address           Offset\n");
+    printf("       Size              EntSize          Flag   Link  Info  Allin\n");
+
     for (int i = 0; i < f->e_hdr.e_shnum; i++){
+        printf("  [%2d]", i);
         print_section_header(&f->s_hdrs[i]);
-        printf("\n");
     }
     printf("\n");
 }
