@@ -13,7 +13,7 @@ ElfW(Phdr) read_program_header(FILE *src) {
 
     // Identifies the type of the segment.
     read_bytes(src, hdr.p_type, 4);
-    printf("%x\n", hdr.p_type);
+
 #if defined(__LP64__)
     // Segment-dependent flags (position for 64-bit structure).
     read_bytes(src, hdr.p_flags, 4);

@@ -7,51 +7,91 @@
 #include <malloc.h>
 #include "headers/elf_section_header.h"
 
-void print_section_header(ElfW(Shdr) *hdr) {
-    printf(" %016x  %16s  %016lx  %08lx\n",
-           hdr->sh_name, section_type_to_string(hdr->sh_type), hdr->sh_addr, hdr->sh_offset);
+void print_section_header(ElfW_Shdr *s_hdr) {
+    char *flags = section_flags_to_string(s_hdr->hdr.sh_flags);
+    printf(" %16s  %16s  %016lx  %08lx\n",
+           s_hdr->name, section_type_to_string(s_hdr->hdr.sh_type), s_hdr->hdr.sh_addr, s_hdr->hdr.sh_offset);
     printf("       %016lx  %016lx  %3s %6d %6d %5ld\n",
-           hdr->sh_size, hdr->sh_entsize, section_flags_to_string(hdr->sh_flags), hdr->sh_link, hdr->sh_info,
-           hdr->sh_addralign);
+           s_hdr->hdr.sh_size, s_hdr->hdr.sh_entsize, flags,
+           s_hdr->hdr.sh_link, s_hdr->hdr.sh_info,
+           s_hdr->hdr.sh_addralign);
+    free(flags);
 }
 
-ElfW(Shdr) read_section_header(FILE *src, ElfW(Off) off) {
-    ElfW(Shdr) hdr = {0};
+ElfW_Shdr read_section_header(FILE *src, ElfW(Xword) off) {
+    ElfW_Shdr s_hdr = {
+            .hdr = {0},
+            .name = "NULL\0",
+    };
 
     fseek(src, off, SEEK_SET);
 
     // An offset to a string in the .shstrtab section that represents the name of this section.
-    read_bytes(src, hdr.sh_name, 4);
+    read_bytes(src, s_hdr.hdr.sh_name, 4);
 
     // Identifies the type of this header.
-    read_bytes(src, hdr.sh_type, 4);
+    read_bytes(src, s_hdr.hdr.sh_type, 4);
 
     // Identifies the attributes of the section.
-    read_bytes(src, hdr.sh_flags, ElfWs);
+    read_bytes(src, s_hdr.hdr.sh_flags, ElfWs);
 
     // Virtual address of the section in memory, for sections that are loaded.
-    read_bytes(src, hdr.sh_addr, ElfWs);
+    read_bytes(src, s_hdr.hdr.sh_addr, ElfWs);
 
     // Offset of the section in the file image.
-    read_bytes(src, hdr.sh_offset, ElfWs);
+    read_bytes(src, s_hdr.hdr.sh_offset, ElfWs);
 
     // Size in bytes of the section in the file image. May be 0.
-    read_bytes(src, hdr.sh_size, ElfWs);
+    read_bytes(src, s_hdr.hdr.sh_size, ElfWs);
 
     // Contains the section index of an associated section.
-    read_bytes(src, hdr.sh_link, 4);
+    read_bytes(src, s_hdr.hdr.sh_link, 4);
 
     // Contains extra information about the section.
-    read_bytes(src, hdr.sh_info, 4);
+    read_bytes(src, s_hdr.hdr.sh_info, 4);
 
     // Contains the required alignment of the section. This field must be a power of two.
-    read_bytes(src, hdr.sh_addralign, ElfWs);
+    read_bytes(src, s_hdr.hdr.sh_addralign, ElfWs);
 
     // Contains the size, in bytes, of each entry, for sections that contain fixed-size entries.
     // Otherwise, this field contains zero.
-    read_bytes(src, hdr.sh_entsize, ElfWs);
+    read_bytes(src, s_hdr.hdr.sh_entsize, ElfWs);
 
-    return hdr;
+    return s_hdr;
+}
+
+char *get_shstrtab_name(FILE *src, ElfW(Off) off) {
+
+    // points to the beginning of the name in .shstrtab section
+    fseek(src, off, SEEK_SET);
+    char *name = calloc(1, 17);
+    char c = '\0';
+    int cont = 0;
+
+    // read byte for byte the name
+    do {
+        read_bytes(src, c, 1);
+        name[cont] = c;
+        cont++;
+    } while (cont < 16 && c != '\0');
+
+    // if the names are too long just abbreviate
+    if (cont >= 16) {
+        name[11] = '[';
+        name[12] = '.';
+        name[13] = '.';
+        name[14] = '.';
+        name[15] = ']';
+    }
+    // skip to the next name because it didn't finish reading
+    if (cont == 1) {
+        strcpy(name, "NULL\0");
+
+        cont = 0;
+        name[16] = '\0';
+    }
+
+    return name;
 }
 
 char *section_type_to_string(ElfW(Word) type) {
@@ -102,22 +142,24 @@ char *section_type_to_string(ElfW(Word) type) {
 }
 
 char *section_flags_to_string(ElfW(Xword) flags) {
-    char str[11] = "\0";
-    if (flags & SHF_WRITE) strcat(str, "W");
-    if (flags & SHF_ALLOC) strcat(str, "A");
-    if (flags & SHF_EXECINSTR) strcat(str, "X");
-    if (flags & SHF_MERGE) strcat(str, "M");
-    if (flags & SHF_STRINGS) strcat(str, "S");
-    if (flags & SHF_INFO_LINK) strcat(str, "I");
-    if (flags & SHF_LINK_ORDER) strcat(str, "L");
-    if (flags & SHF_OS_NONCONFORMING) strcat(str, "O");
-    if (flags & SHF_GROUP) strcat(str, "G");
-    if (flags & SHF_TLS) strcat(str, "T");
-    if (flags & SHF_EXCLUDE) strcat(str, "E");
-    if (flags & SHF_COMPRESSED) strcat(str, "C");
-    str[strlen(str) - 3] = '\0';
+    char *str = calloc(20, 1);
+    int i = 0;
 
-    char *ret = malloc(strlen(str));
-    strcpy(ret, str);
-    return ret;
+    //@formatter:off
+    if (flags & SHF_WRITE)           { str[i] = 'W'; i++; }
+    if (flags & SHF_ALLOC)           { str[i] = 'A'; i++; }
+    if (flags & SHF_EXECINSTR)       { str[i] = 'X'; i++; }
+    if (flags & SHF_MERGE)           { str[i] = 'M'; i++; }
+    if (flags & SHF_STRINGS)         { str[i] = 'S'; i++; }
+    if (flags & SHF_INFO_LINK)       { str[i] = 'I'; i++; }
+    if (flags & SHF_LINK_ORDER)      { str[i] = 'L'; i++; }
+    if (flags & SHF_OS_NONCONFORMING){ str[i] = 'O'; i++; }
+    if (flags & SHF_GROUP)           { str[i] = 'G'; i++; }
+    if (flags & SHF_TLS)             { str[i] = 'T'; i++; }
+    if (flags & SHF_COMPRESSED)      { str[i] = 'C'; i++; }
+    if (flags & SHF_EXCLUDE)         { str[i] = 'E'; i++; }
+    //@formatter:on
+    str[i] = '\0';
+
+    return str;
 }

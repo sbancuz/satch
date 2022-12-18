@@ -10,9 +10,16 @@
 
 #include "macros.h"
 
-void print_section_header(ElfW(Shdr) *hdr);
+typedef struct elfw_shdr {
+    ElfW(Shdr) hdr;
+    char name[17];
+} ElfW_Shdr;
 
-ElfW(Shdr) read_section_header(FILE *src, ElfW(Off) off);
+void print_section_header(ElfW_Shdr *hdr);
+
+ElfW_Shdr read_section_header(FILE *src, ElfW(Xword) off);
+
+char *get_shstrtab_name(FILE *src, ElfW(Off) off);
 
 char *section_type_to_string(ElfW(Word) type);
 

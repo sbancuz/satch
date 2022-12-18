@@ -11,6 +11,6 @@ int main() {
 
     Elf_file e_file = read_elf(f);
     print_elf(&e_file);
-
+    free_elf(&e_file);
     return 0;
 }

@@ -15,11 +15,14 @@
 typedef struct elf_fil {
     ElfW(Ehdr) e_hdr;
     ElfW(Phdr) p_hdr;
-    ElfW(Shdr) *s_hdrs;
+    ElfW_Shdr *s_hdrs;
+
 } Elf_file;
 
 Elf_file read_elf(FILE *src);
 
 void print_elf(Elf_file *f);
+
+void free_elf(Elf_file *f);
 
 #endif //ELF_PATCHER_ELF_FILE_H
