@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.24)
 project(elf_patcher C)
 
-add_compile_options(-Wall -Wextra -pedantic -Wpedantic -Wshadow)
+add_compile_options(-Wall -Wextra -pedantic -Wpedantic -Wshadow -fsanitize=address -g3)
+add_link_options(-fsanitize=address -lasan)
 
 set(CMAKE_C_STANDARD 23)
 
