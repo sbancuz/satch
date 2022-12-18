@@ -1,4 +1,4 @@
 # Santa's pATCHer
 Elf patcher
 
-*** WORKING IN PROGRESS ***
+*** WORK IN PROGRESS ***
