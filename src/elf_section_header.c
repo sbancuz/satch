@@ -94,8 +94,11 @@ char *get_shstrtab_name(FILE *src, ElfW(Off) off) {
     return name;
 }
 
+// https://github.com/torvalds/linux/blob/master/include/uapi/linux/elf.h line: 271
 char *section_type_to_string(ElfW(Word) type) {
-    // NOTE: This may not be exhaustive
+    // NOTE: This may not be exhaustive because oracle defines many more section types
+		//       but since I can't find information about the header where those other values
+		//       are defined I will leave it like this for now
 
     switch (type) {
         case SHT_NULL:
