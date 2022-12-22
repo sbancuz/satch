@@ -4,10 +4,10 @@
 
 #include <stdio.h>
 #include <string.h>
-#include <malloc.h>
+#include <stdlib.h>
 #include "headers/elf_section_header.h"
 
-void print_section_header(ElfW_Shdr *s_hdr) {
+void print_section_header(const ElfW_Shdr *s_hdr) {
     char *flags = section_flags_to_string(s_hdr->hdr.sh_flags);
     printf(" %16s  %16s  %016lx  %08lx\n",
            s_hdr->name, section_type_to_string(s_hdr->hdr.sh_type), s_hdr->hdr.sh_addr, s_hdr->hdr.sh_offset);

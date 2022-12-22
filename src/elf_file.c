@@ -17,7 +17,11 @@ Elf_file read_elf(FILE *src) {
     }
 
     for (int i = 0; i < file.e_hdr.e_shnum; i++) {
-        char *tmp = get_shstrtab_name(src, file.s_hdrs[file.e_hdr.e_shstrndx].hdr.sh_offset + file.s_hdrs[i].hdr.sh_name);
+        file.s_hdrs[i].section = get_section(src, &file.s_hdrs[i].hdr);
+
+        // get the names of the sections for better printing
+        char *tmp = get_shstrtab_name(src,
+                                      file.s_hdrs[file.e_hdr.e_shstrndx].hdr.sh_offset + file.s_hdrs[i].hdr.sh_name);
         strcpy(file.s_hdrs[i].name,
                tmp);
         free(tmp);
@@ -40,8 +44,15 @@ void print_elf(Elf_file *f) {
         print_section_header(&f->s_hdrs[i]);
     }
     printf("\n");
+
+    for (int i = 0; i < f->e_hdr.e_shnum; i++) {
+        print_section(&f->s_hdrs[i].section, &f->s_hdrs[i].hdr, f->s_hdrs[i].name);
+    }
 }
 
 void free_elf(Elf_file *f) {
+    for (int i = 0; i < f->e_hdr.e_shnum; i++) {
+        free_section(&f->s_hdrs[i].section, &f->s_hdrs[i].hdr);
+    }
     free(f->s_hdrs);
 }
