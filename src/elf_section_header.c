@@ -60,40 +60,6 @@ ElfW_Shdr read_section_header(FILE *src, ElfW(Xword) off) {
     return s_hdr;
 }
 
-char *get_shstrtab_name(FILE *src, ElfW(Off) off) {
-
-    // points to the beginning of the name in .shstrtab section
-    fseek(src, off, SEEK_SET);
-    char *name = calloc(1, 17);
-    char c = '\0';
-    int cont = 0;
-
-    // read byte for byte the name
-    do {
-        read_bytes(src, c, 1);
-        name[cont] = c;
-        cont++;
-    } while (cont < 16 && c != '\0');
-
-    // if the names are too long just abbreviate
-    if (cont >= 16) {
-        name[11] = '[';
-        name[12] = '.';
-        name[13] = '.';
-        name[14] = '.';
-        name[15] = ']';
-    }
-    // skip to the next name because it didn't finish reading
-    if (cont == 1) {
-        strcpy(name, "NULL\0");
-
-        cont = 0;
-        name[16] = '\0';
-    }
-
-    return name;
-}
-
 char *section_type_to_string(ElfW(Word) type) {
     // NOTE: This may not be exhaustive
 

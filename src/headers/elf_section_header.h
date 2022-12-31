@@ -21,8 +21,6 @@ void print_section_header(const ElfW_Shdr *hdr);
 
 ElfW_Shdr read_section_header(FILE *src, ElfW(Xword) off);
 
-char *get_shstrtab_name(FILE *src, ElfW(Off) off);
-
 char *section_type_to_string(ElfW(Word) type);
 
 char *section_flags_to_string(ElfW(Xword) flags);

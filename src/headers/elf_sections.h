@@ -43,4 +43,6 @@ char *symtab_type_to_string(const unsigned char info);
 
 char *symtab_visibility_to_string(const ElfW(Section) vis);
 
+char *get_shstrtab_name(FILE *src, ElfW(Off) off);
+
 #endif //ELF_PATCHER_ELF_SECTIONS_H
