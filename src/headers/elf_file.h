@@ -16,7 +16,6 @@ typedef struct elf_fil {
     ElfW(Ehdr) e_hdr;
     ElfW(Phdr) p_hdr;
     ElfW_Shdr *s_hdrs;
-    ElfW_Note *notes;
 } Elf_file;
 
 Elf_file read_elf(FILE *src);
