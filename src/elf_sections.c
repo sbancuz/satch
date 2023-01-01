@@ -7,8 +7,6 @@
 #include "headers/elf_sections.h"
 #include "../thirdparty/elf_commons.h"
 
-void print_symtab(Elf64_Sym *sym);
-
 ElfW_Sec get_section(FILE *src, const ElfW(Shdr) *hdr) {
     ElfW_Sec sec = {0};
     switch (hdr->sh_type) {
@@ -23,6 +21,11 @@ ElfW_Sec get_section(FILE *src, const ElfW(Shdr) *hdr) {
             }
             break;
         case SHT_STRTAB:
+            fseek(src, hdr->sh_offset, SEEK_SET);
+            sec.strtab = calloc(1, hdr->sh_size + 1);
+            for (size_t i = 0; i < hdr->sh_size - 1; ++i) {
+                read_bytes(src, sec.strtab[i], 1);
+            }
             break;
         case SHT_RELA:
             break;
@@ -60,20 +63,17 @@ ElfW_Sec get_section(FILE *src, const ElfW(Shdr) *hdr) {
     return sec;
 }
 
-void print_section(const ElfW_Sec *sec, const ElfW(Shdr) *hdr, const char *name) {
+void free_section(ElfW_Sec *sec, const ElfW(Shdr) *hdr) {
     switch (hdr->sh_type) {
         case SHT_NULL:
             break;
         case SHT_PROGBITS:
             break;
         case SHT_SYMTAB:
-            printf("Num:           Value: Size:   Type:  Assoc:       Vis: Ind: Name:\n");
-            for (size_t i = 0; i < hdr->sh_size / sizeof(ElfW(Sym)); i++) {
-                printf("%3zu: ", i);
-                print_symtab(&sec->sym[i]);
-            }
+            free(sec->sym);
             break;
         case SHT_STRTAB:
+            free(sec->strtab);
             break;
         case SHT_RELA:
             break;
@@ -82,8 +82,8 @@ void print_section(const ElfW_Sec *sec, const ElfW(Shdr) *hdr, const char *name)
         case SHT_DYNAMIC:
             break;
         case SHT_NOTE:
-            print_note(&sec->note, name);
-            printf("\n");
+            free(sec->note.name);
+            free(sec->note.desc);
             break;
         case SHT_NOBITS:
             break;
@@ -110,14 +110,20 @@ void print_section(const ElfW_Sec *sec, const ElfW(Shdr) *hdr, const char *name)
     }
 }
 
-void free_section(ElfW_Sec *sec, const ElfW(Shdr) *hdr) {
-    switch (hdr->sh_type) {
+void print_section(const Elf_file *f, size_t i) {
+    switch (f->s_hdrs[i].hdr.sh_type) {
         case SHT_NULL:
             break;
         case SHT_PROGBITS:
             break;
         case SHT_SYMTAB:
-            free(sec->sym);
+            printf("Num:           Value: Size:   Type:  Assoc:       Vis: Ind: Name:\n");
+            for (size_t hi = 0; hi < f->s_hdrs[i].hdr.sh_size / sizeof(ElfW(Sym)); hi++) {
+                printf("%3zu: ", hi);
+                print_symtab(&f->s_hdrs[i].section.sym[hi],
+                             (f->s_hdrs[f->s_hdrs[i].hdr.sh_link].section.strtab +
+                              f->s_hdrs[i].section.sym[hi].st_name));
+            }
             break;
         case SHT_STRTAB:
             break;
@@ -128,8 +134,10 @@ void free_section(ElfW_Sec *sec, const ElfW(Shdr) *hdr) {
         case SHT_DYNAMIC:
             break;
         case SHT_NOTE:
-            free(sec->note.name);
-            free(sec->note.desc);
+            // shstr
+            print_note(&f->s_hdrs[i].section.note,
+                       f->s_hdrs[f->e_hdr.e_shstrndx].section.strtab + f->s_hdrs[i].hdr.sh_name);
+            printf("\n");
             break;
         case SHT_NOBITS:
             break;
@@ -212,7 +220,6 @@ ElfW_Note get_section_note(FILE *src, ElfW(Off) off) {
     if (align != 0) {
         fseek(src, 4 - align, SEEK_CUR);
     }
-    print_note(&note, "ciao\0");
 
     return note;
 }
@@ -234,12 +241,12 @@ ElfW(Sym) get_section_symtab(FILE *src, ElfW(Off) off) {
     return sym;
 }
 
-void print_symtab(ElfW(Sym) *sym) {
+void print_symtab(ElfW(Sym) *sym, char *name) {
     // TODO: Properly print all the .symtab info
-    printf("%016lx  %4zu %7s %7s %10s  %3d %d\n",
+    printf("%016lx  %4zu %7s %7s %10s  %3d %s\n",
            sym->st_value, sym->st_size, symtab_type_to_string(sym->st_info),
            symtab_bind_to_string(sym->st_info), symtab_visibility_to_string(sym->st_other),
-           sym->st_shndx, sym->st_name);
+           sym->st_shndx, name);
 }
 
 char *symtab_bind_to_string(const unsigned char info) {
@@ -309,39 +316,4 @@ char *symtab_visibility_to_string(const ElfW(Section) vis) {
     }
 
     return "UNK";
-}
-
-
-char *get_shstrtab_name(FILE *src, ElfW(Off) off) {
-
-    // points to the beginning of the name in .shstrtab section
-    fseek(src, off, SEEK_SET);
-    char *name = calloc(1, 17);
-    char c = '\0';
-    int cont = 0;
-
-    // read byte for byte the name
-    do {
-        read_bytes(src, c, 1);
-        name[cont] = c;
-        cont++;
-    } while (cont < 16 && c != '\0');
-
-    // if the names are too long just abbreviate
-    if (cont >= 16) {
-        name[11] = '[';
-        name[12] = '.';
-        name[13] = '.';
-        name[14] = '.';
-        name[15] = ']';
-    }
-    // skip to the next name because it didn't finish reading
-    if (cont == 1) {
-        strcpy(name, "NULL\0");
-
-        cont = 0;
-        name[16] = '\0';
-    }
-
-    return name;
 }

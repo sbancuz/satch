@@ -7,10 +7,10 @@
 #include <stdlib.h>
 #include "headers/elf_section_header.h"
 
-void print_section_header(const ElfW_Shdr *s_hdr) {
+void print_section_header(const ElfW_Shdr *s_hdr, const char *name) {
     char *flags = section_flags_to_string(s_hdr->hdr.sh_flags);
     printf(" %16s  %16s  %016lx  %08lx\n",
-           s_hdr->name, section_type_to_string(s_hdr->hdr.sh_type), s_hdr->hdr.sh_addr, s_hdr->hdr.sh_offset);
+           name, section_type_to_string(s_hdr->hdr.sh_type), s_hdr->hdr.sh_addr, s_hdr->hdr.sh_offset);
     printf("       %016lx  %016lx  %3s %6d %6d %5ld\n",
            s_hdr->hdr.sh_size, s_hdr->hdr.sh_entsize, flags,
            s_hdr->hdr.sh_link, s_hdr->hdr.sh_info,
@@ -21,7 +21,6 @@ void print_section_header(const ElfW_Shdr *s_hdr) {
 ElfW_Shdr read_section_header(FILE *src, ElfW(Xword) off) {
     ElfW_Shdr s_hdr = {
             .hdr = {0},
-            .name = "NULL\0",
     };
 
     fseek(src, off, SEEK_SET);

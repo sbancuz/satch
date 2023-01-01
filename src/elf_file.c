@@ -1,9 +1,13 @@
 //
 // Created by sbancuz on 12/16/22.
 //
-
-#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
 #include "headers/elf_file.h"
+#include "headers/elf_sections.h"
+#include "headers/elf_section_header.h"
+#include "headers/elf_program_header.h"
+#include "headers/elf_header.h"
 
 Elf_file read_elf(FILE *src) {
     Elf_file file = {
@@ -18,13 +22,6 @@ Elf_file read_elf(FILE *src) {
 
     for (int i = 0; i < file.e_hdr.e_shnum; i++) {
         file.s_hdrs[i].section = get_section(src, &file.s_hdrs[i].hdr);
-
-        // get the names of the sections for better printing
-        char *tmp = get_shstrtab_name(src,
-                                      file.s_hdrs[file.e_hdr.e_shstrndx].hdr.sh_offset + file.s_hdrs[i].hdr.sh_name);
-        strcpy(file.s_hdrs[i].name,
-               tmp);
-        free(tmp);
     }
 
     return file;
@@ -41,12 +38,13 @@ void print_elf(Elf_file *f) {
 
     for (int i = 0; i < f->e_hdr.e_shnum; i++) {
         printf("  [%2d]", i);
-        print_section_header(&f->s_hdrs[i]);
+        print_section_header(&f->s_hdrs[i],
+                             f->s_hdrs[f->e_hdr.e_shstrndx].section.strtab + f->s_hdrs[i].hdr.sh_name);
     }
     printf("\n");
 
     for (int i = 0; i < f->e_hdr.e_shnum; i++) {
-        print_section(&f->s_hdrs[i].section, &f->s_hdrs[i].hdr, f->s_hdrs[i].name);
+        print_section(f, i);
     }
 }
 

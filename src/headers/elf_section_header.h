@@ -9,15 +9,10 @@
 #include <bits/types/FILE.h>
 
 #include "macros.h"
-#include "elf_sections.h"
+#include "structs.h"
 
-typedef struct elfw_shdr {
-    ElfW(Shdr) hdr;
-    char name[17];
-    ElfW_Sec section;
-} ElfW_Shdr;
 
-void print_section_header(const ElfW_Shdr *hdr);
+void print_section_header(const ElfW_Shdr *hdr, const char *name);
 
 ElfW_Shdr read_section_header(FILE *src, ElfW(Xword) off);
 
