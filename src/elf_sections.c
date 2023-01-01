@@ -43,6 +43,10 @@ ElfW_Sec get_section(FILE *src, const ElfW(Shdr) *hdr) {
         case SHT_SHLIB:
             break;
         case SHT_DYNSYM:
+            sec.sym = calloc(hdr->sh_size / sizeof(ElfW(Sym)), sizeof(ElfW(Sym)));
+            for (size_t i = 0; i < hdr->sh_size / sizeof(ElfW(Sym)); i++) {
+                sec.sym[i] = get_section_symtab(src, hdr->sh_offset + sizeof(ElfW(Sym)) * i);
+            }
             break;
         case SHT_INIT_ARRAY:
             break;
@@ -92,6 +96,7 @@ void free_section(ElfW_Sec *sec, const ElfW(Shdr) *hdr) {
         case SHT_SHLIB:
             break;
         case SHT_DYNSYM:
+            free(sec->sym);
             break;
         case SHT_INIT_ARRAY:
             break;
@@ -117,6 +122,8 @@ void print_section(const Elf_file *f, size_t i) {
         case SHT_PROGBITS:
             break;
         case SHT_SYMTAB:
+            // TODO: Don't hardcode names...
+            printf("Printing .symtab\n");
             printf("Num:           Value: Size:   Type:  Assoc:       Vis: Ind: Name:\n");
             for (size_t hi = 0; hi < f->s_hdrs[i].hdr.sh_size / sizeof(ElfW(Sym)); hi++) {
                 printf("%3zu: ", hi);
@@ -124,6 +131,7 @@ void print_section(const Elf_file *f, size_t i) {
                              (f->s_hdrs[f->s_hdrs[i].hdr.sh_link].section.strtab +
                               f->s_hdrs[i].section.sym[hi].st_name));
             }
+            printf("\n");
             break;
         case SHT_STRTAB:
             break;
@@ -134,7 +142,6 @@ void print_section(const Elf_file *f, size_t i) {
         case SHT_DYNAMIC:
             break;
         case SHT_NOTE:
-            // shstr
             print_note(&f->s_hdrs[i].section.note,
                        f->s_hdrs[f->e_hdr.e_shstrndx].section.strtab + f->s_hdrs[i].hdr.sh_name);
             printf("\n");
@@ -146,7 +153,16 @@ void print_section(const Elf_file *f, size_t i) {
         case SHT_SHLIB:
             break;
         case SHT_DYNSYM:
-            break;
+            // TODO: Finish with symbol versioning resolution
+            printf("Printing .dymsym\n");
+            printf("Num:           Value: Size:   Type:  Assoc:       Vis: Ind: Name:\n");
+            for (size_t hi = 0; hi < f->s_hdrs[i].hdr.sh_size / sizeof(ElfW(Sym)); hi++) {
+                printf("%3zu: ", hi);
+                print_symtab(&f->s_hdrs[i].section.sym[hi],
+                             (f->s_hdrs[f->s_hdrs[i].hdr.sh_link].section.strtab +
+                              f->s_hdrs[i].section.sym[hi].st_name));
+            }
+            printf("\n");
         case SHT_INIT_ARRAY:
             break;
         case SHT_FINI_ARRAY:
@@ -242,7 +258,6 @@ ElfW(Sym) get_section_symtab(FILE *src, ElfW(Off) off) {
 }
 
 void print_symtab(ElfW(Sym) *sym, char *name) {
-    // TODO: Properly print all the .symtab info
     printf("%016lx  %4zu %7s %7s %10s  %3d %s\n",
            sym->st_value, sym->st_size, symtab_type_to_string(sym->st_info),
            symtab_bind_to_string(sym->st_info), symtab_visibility_to_string(sym->st_other),
