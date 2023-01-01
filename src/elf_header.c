@@ -90,14 +90,14 @@ void print_elf_header(ElfW(Ehdr) *hdr) {
     printf("\tFile Type:    %s\n", type_to_string(hdr->e_type));
     printf("\tMachine:      %s\n", machine_to_string(hdr->e_machine));
     printf("\tVersion:      %x\n", hdr->e_version);
-    printf("\tEntry:        %ld\n", hdr->e_entry);
-    printf("\tPhys. Off:    %lx\n", hdr->e_phoff);
-    printf("\tSection Off:  %lx\n", hdr->e_shoff);
+    printf("\tEntry:        0x%lx\n", hdr->e_entry);
+    printf("\tPhys. Off:    %ld (bytes)\n", hdr->e_phoff);
+    printf("\tSection Off:  %ld (bytes)\n", hdr->e_shoff);
     printf("\tFlags:        0x%x\n", hdr->e_flags);
-    printf("\tHeader size:  %hd\n", hdr->e_ehsize);
-    printf("\tP_head size:  %hd\n", hdr->e_phentsize);
+    printf("\tHeader size:  %hd (bytes)\n", hdr->e_ehsize);
+    printf("\tP_head size:  %hd (bytes)\n", hdr->e_phentsize);
     printf("\tP_head entry: %hd\n", hdr->e_phnum);
-    printf("\tS_head size:  %hd\n", hdr->e_shentsize);
+    printf("\tS_head size:  %hd (bytes)\n", hdr->e_shentsize);
     printf("\tS_head entry: %hd\n", hdr->e_shnum);
     printf("\tS_name index: %hd\n", hdr->e_shstrndx);
 }

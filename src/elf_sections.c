@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "headers/elf_sections.h"
-#include "../thirdparty/elf_commons.h"
 
 ElfW_Sec get_section(FILE *src, const ElfW(Shdr) *hdr) {
     ElfW_Sec sec = {0};
