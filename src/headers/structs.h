@@ -31,7 +31,7 @@ typedef struct elfw_shdr {
 
 typedef struct elf_fil {
     ElfW(Ehdr) e_hdr;
-    ElfW(Phdr) p_hdr;
+    ElfW(Phdr) *p_hdrs;
     ElfW_Shdr *s_hdrs;
 } Elf_file;
 

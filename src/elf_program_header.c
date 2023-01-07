@@ -8,8 +8,10 @@
 #include "headers/macros.h"
 
 // https://en.wikipedia.org/wiki/Executable_and_Linkable_Format#Program_header
-ElfW(Phdr) read_program_header(FILE *src) {
+ElfW(Phdr) read_program_header(FILE *src, const ElfW(Off) off) {
     ElfW(Phdr) hdr = {0};
+
+		fseek(src, off, SEEK_SET);
 
     // Identifies the type of the segment.
     read_bytes(src, hdr.p_type, 4);
@@ -52,8 +54,8 @@ void print_program_header(ElfW(Phdr) *hdr) {
     printf("\tOffset:       %lx\n", hdr->p_offset);
     printf("\tVirt Addr:    %lx\n", hdr->p_vaddr);
     printf("\tPhys Addr:    %lx\n", hdr->p_paddr);
-    printf("\tFile Size:    %ld\n", hdr->p_filesz);
-    printf("\tMemory Size:  %ld\n", hdr->p_memsz);
+    printf("\tFile Size:    %lx\n", hdr->p_filesz);
+    printf("\tMemory Size:  %lx\n", hdr->p_memsz);
     printf("\tAlignment:    %lx\n", hdr->p_align);
 }
 

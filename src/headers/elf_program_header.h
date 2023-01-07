@@ -9,7 +9,7 @@
 #include "macros.h"
 #include "structs.h"
 
-Elf64_Phdr read_program_header(FILE *src);
+ElfW(Phdr) read_program_header(FILE *src, const ElfW(Off) off);
 
 void print_program_header(ElfW(Phdr) *src);
 
