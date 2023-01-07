@@ -12,10 +12,14 @@
 Elf_file read_elf(FILE *src) {
     Elf_file file = {
             .e_hdr = read_elf_header(src),
-            .p_hdr = read_program_header(src),
     };
 
-    file.s_hdrs = calloc(file.e_hdr.e_shnum, sizeof(ElfW_Shdr));
+		file.p_hdrs = calloc(file.e_hdr.e_phnum, file.e_hdr.e_phentsize);
+		for (int i = 0; i < file.e_hdr.e_phnum; i++) {
+				file.p_hdrs[i] = read_program_header(src, file.e_hdr.e_ehsize + i * file.e_hdr.e_phentsize);
+		}
+
+		file.s_hdrs = calloc(file.e_hdr.e_shnum, sizeof(ElfW_Shdr));
     for (int i = 0; i < file.e_hdr.e_shnum; i++) {
         file.s_hdrs[i] = read_section_header(src, file.e_hdr.e_shoff + file.e_hdr.e_shentsize * i);
     }
@@ -30,7 +34,13 @@ Elf_file read_elf(FILE *src) {
 void print_elf(Elf_file *f) {
     print_elf_header(&f->e_hdr);
     printf("\n");
-    print_program_header(&f->p_hdr);
+
+		printf("Program Header: \n");
+		printf("         Type     Offset             VirtAddr           PhysAddr\n"
+	                "                  FileSiz            MemSiz              Flags  Align\n");
+		for (int i = 0; i < &f->e_hdr.e_phnum; i++) {
+				print_program_header(&f->p_hdrs[i]);
+		}
     printf("\n");
 
     printf("  [N°] Name              Type             Address           Offset\n");
@@ -52,5 +62,6 @@ void free_elf(Elf_file *f) {
     for (int i = 0; i < f->e_hdr.e_shnum; i++) {
         free_section(&f->s_hdrs[i].section, &f->s_hdrs[i].hdr);
     }
+		free(f->p_hdrs);
     free(f->s_hdrs);
 }

@@ -48,44 +48,59 @@ ElfW(Phdr) read_program_header(FILE *src, const ElfW(Off) off) {
 }
 
 void print_program_header(ElfW(Phdr) *hdr) {
-    printf("Program Header: \n");
-    printf("\tSegment Type: %s\n", segment_type_to_str(hdr->p_type));
-    printf("\tFlags:        %x\n", hdr->p_flags);
-    printf("\tOffset:       %lx\n", hdr->p_offset);
-    printf("\tVirt Addr:    %lx\n", hdr->p_vaddr);
-    printf("\tPhys Addr:    %lx\n", hdr->p_paddr);
-    printf("\tFile Size:    %lx\n", hdr->p_filesz);
-    printf("\tMemory Size:  %lx\n", hdr->p_memsz);
-    printf("\tAlignment:    %lx\n", hdr->p_align);
+		char *f = pheader_flags_to_string(hdr->p_flags);
+		printf("%16s  0x%016lx 0x%016lx 0x%016lx\n %16s 0x%016lx 0x%016lx %4s  0x%010lx\n",
+		       segment_type_to_str(hdr->p_type), hdr->p_offset, hdr->p_vaddr,
+	       hdr->p_paddr, "", hdr->p_filesz, hdr->p_memsz, f,
+	       hdr->p_align);
+		free(f);
 }
 
 char *segment_type_to_str(ElfW(Word) typ) {
     switch (typ) {
         case PT_NULL:
-            return "PT_NULL     - Program header table entry unused.";
+            return "NULL";
         case PT_LOAD:
-            return "PT_LOAD     - Loadable segment.";
+            return "LOAD";
         case PT_DYNAMIC:
-            return "PT_DYNAMIC  - Dynamic linking information.";
+            return "DYNAMIC";
         case PT_INTERP:
-            return "PT_INTERP   - Interpreter information.";
+            return "INTERP";
         case PT_NOTE:
-            return "PT_NOTE     - Auxiliary information.";
+            return "NOTE";
         case PT_SHLIB:
-            return "PT_SHLIB    - Reserved.";
+            return "SHLIB";
         case PT_PHDR:
-            return "PT_PHDR     - Segment containing program header table itself.";
+            return "PHDR";
         case PT_TLS:
-            return "PT_TLS      - Thread-Local Storage template.";
+            return "TLS";
         case PT_LOOS:
-            return "PT_LOOS     - Reserved inclusive range. Operating system specific.";
+            return "LOOS";
         case PT_HIOS:
-            return "PT_HIOS     - Reserved inclusive range. Operating system specific.";
+            return "HIOS";
         case PT_LOPROC:
-            return "PT_LOPROC   - Reserved inclusive range. Processor specific.";
+            return "LOPROC";
         case PT_HIPROC:
-            return "PT_HIPROC   - Reserved inclusive range. Processor specific.";
+            return "HIPROC";
+	    case PT_GNU_PROPERTY:
+		    return "GNU_PROPERTY";
+	    case PT_GNU_STACK:
+		    return "GNU_STACK";
+	    case PT_GNU_EH_FRAME:
+		    return "GNU_EH_FRAME";
+	    case PT_GNU_RELRO:
+		    return "GNU_RELRO";
     }
 
     return "Invalid";
+}
+
+char *pheader_flags_to_string(ElfW(Xword) flags) {
+		char *ret = calloc(1, 5);
+		if (flags & PF_X) ret[0] = 'X'; else ret[0] = ' ';
+		if (flags & PF_W) ret[1] = 'W'; else ret[1] = ' ';
+		if (flags & PF_R) ret[2] = 'R'; else ret[2] = ' ';
+		if (flags & PF_MASKPROC) ret[3] = 'U'; else ret[3] = ' ';
+
+		return ret;
 }

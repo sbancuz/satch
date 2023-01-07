@@ -15,4 +15,6 @@ void print_program_header(ElfW(Phdr) *src);
 
 char *segment_type_to_str(ElfW(Word) typ);
 
+char *pheader_flags_to_string(ElfW(Xword) flags);
+
 #endif //ELF_PATCHER_ELF_PROGRAM_HEADER_H
