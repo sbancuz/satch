@@ -4,10 +4,11 @@
 #ifndef ELF_PATCHER_ELF_HEADER_H
 #define ELF_PATCHER_ELF_HEADER_H
 
-#include <elf.h>
 #include <stdlib.h>
 #include <stdio.h>
+
 #include "macros.h"
+#include "structs.h"
 
 Elf64_Ehdr read_elf_header(FILE *src);
 

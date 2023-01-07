@@ -9,17 +9,12 @@
 #include <bits/types/FILE.h>
 
 #include "macros.h"
+#include "structs.h"
 
-typedef struct elfw_shdr {
-    ElfW(Shdr) hdr;
-    char name[17];
-} ElfW_Shdr;
 
-void print_section_header(ElfW_Shdr *hdr);
+void print_section_header(const ElfW_Shdr *hdr, const char *name);
 
 ElfW_Shdr read_section_header(FILE *src, ElfW(Xword) off);
-
-char *get_shstrtab_name(FILE *src, ElfW(Off) off);
 
 char *section_type_to_string(ElfW(Word) type);
 
