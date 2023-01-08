@@ -187,7 +187,9 @@ void print_note(const ElfW_Note *note, const char *name) {
     printf("\tNamesz:        %zu\n", note->namesz);
     printf("\tName:          %s\n", note->name);
     printf("\tDescsz:        %zu\n", note->descsz);
-    printf("\tDesc:          %s\n", note->desc);
+    printf("\tDesc:          ");
+	for (int i = 0; i < note->descsz; i += 1) printf("%x", note->desc[i]);
+	printf("\n");
     printf("\tType:          %zu\n", note->type);
 }
 

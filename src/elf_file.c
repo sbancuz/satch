@@ -35,12 +35,12 @@ void print_elf(Elf_file *f) {
     print_elf_header(&f->e_hdr);
     printf("\n");
 
-		printf("Program Header: \n");
-		printf("         Type     Offset             VirtAddr           PhysAddr\n"
-	                "                  FileSiz            MemSiz              Flags  Align\n");
-		for (int i = 0; i < &f->e_hdr.e_phnum; i++) {
-				print_program_header(&f->p_hdrs[i]);
-		}
+	printf("Program Header: \n");
+	printf("         Type     Offset             VirtAddr           PhysAddr\n"
+		   "                  FileSiz            MemSiz              Flags  Align\n");
+	for (int i = 0; i < f->e_hdr.e_phnum; i++) {
+		print_program_header(&f->p_hdrs[i]);
+	}
     printf("\n");
 
     printf("  [N°] Name              Type             Address           Offset\n");
@@ -51,6 +51,7 @@ void print_elf(Elf_file *f) {
         print_section_header(&f->s_hdrs[i],
                              f->s_hdrs[f->e_hdr.e_shstrndx].section.strtab + f->s_hdrs[i].hdr.sh_name);
     }
+
     printf("\n");
 
     for (int i = 0; i < f->e_hdr.e_shnum; i++) {

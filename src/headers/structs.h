@@ -15,7 +15,7 @@ typedef struct elfw_note {
     size_t descsz;
     size_t type;
     char *name;
-    char *desc;
+    unsigned char *desc;
 } ElfW_Note;
 
 typedef union elfw_sec {
